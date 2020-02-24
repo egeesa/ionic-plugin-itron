@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+        xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-itronbridge" version="1.0.0">
+   
+   <name>ItronBridge</name>
+
+   <js-module name="ItronBridge" src="www/ItronBridge.js">
+      <clobbers target="ItronBridge" />
+   </js-module>
+
+   <platform name="android">
+      <config-file parent="/*" target="res/xml/config.xml">
+         <feature name="ItronBridge">
+            <param name="android-package" value="cordova.plugin.itronbridge.ItronBridge" />
+         </feature>
+      </config-file>
+      <config-file parent="/*" target="AndroidManifest.xml" />
+      <source-file src="src/android/ItronBridge.java" target-dir="src/cordova/plugin/itronbridge/ItronBridge" />
+
+       <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.BLUETOOTH" />
+            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        </config-file>
+
+   </platform>
+
+</plugin>
