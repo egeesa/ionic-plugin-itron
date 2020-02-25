@@ -41,7 +41,11 @@ public class ItronBridge extends CordovaPlugin {
 
     //action
     private static final String SEND = "send";
-
+    private static final String OpenBluetooth = "OpenBluetooth";
+    private static final String EGEE_GUID = "d70741e1-585c-4cae-8f7c-e58f0b81c59e"; // Doit matcher avec la licence Itron
+    private static final String macAdress = "00:07:80:10:e8:4a"; 
+   
+    String openBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"OpenBluetooth\",\"ConnectionId\" : \"27\", \"Guid\": \""+ EGEE_GUID +"\",\"Parameters\" : {\"MacAddress\" : \"" + macAdress + "\"}}}";
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -71,20 +75,24 @@ public class ItronBridge extends CordovaPlugin {
 
 
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, String args, CallbackContext callbackContext) throws JSONException {
         Log.d(this.getClass().getName(), "execute : " + action);
-        if (action.equals("send")) {
+        if (SEND.equals(action)) {
             this.send(args, callbackContext);
             return true;
         }
         return false;
     }
 
-    private void send(JSONArray args, CallbackContext callback)
+    private void send(String args, CallbackContext callback)
     {
         if(args != null){
             try {
-                String command = args.getJSONObject(0).getString("command");
+                String command =  openBluetoothCmd;
+                if(OpenBluetooth.equals(args)){
+                    command =  openBluetoothCmd;
+                }
+                //String command = args.getJSONObject(0).getString("command");
                 Log.d(this.getClass().getName(), "send cmd : " + command);
                 IItronServiceCallback callbackItron = new ItronServiceCallback();
 
