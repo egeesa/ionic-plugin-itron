@@ -1,5 +1,7 @@
 package cordova.plugin.itronbridge;
 
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.PluginResult;
@@ -11,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
@@ -23,8 +26,7 @@ import java.lang.ref.WeakReference;
 import android.util.Log;
 
 import com.itron.wh.androiddriver.service.aidl.IItronServiceCallback;
-
-
+import cordova.plugin.itronbridgeservice.ItronBridgeService;
 /**
  * This class echoes a string called from JavaScript.
  */
@@ -32,16 +34,18 @@ public class ItronBridge extends CordovaPlugin {
 
     private ItronBridgeService mDriverConnection;
     private boolean driverConnectionState = false;
+    private boolean connectionState = false;
     private Context mContext;
     private IItronServiceCallback callBack;
-    
+    private static final String TAG = "ITRONTAG";
+
     //action
     private static final String SEND = "send";
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-
+        Log.d(this.getClass().getName(), "initialize");
         mContext = this.cordova.getActivity();
 
        this.mDriverConnection = new ItronBridgeService(new WeakReference(this));
@@ -56,11 +60,11 @@ public class ItronBridge extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
-       
+        Log.d(this.getClass().getName(), "onDestroy");
         this.mDriverConnection.safelyDisconnectTheService();
 
         if(mDriverConnection != null) {
-            unbindService(mDriverConnection);
+            cordova.getActivity().getApplicationContext().unbindService(mDriverConnection);
             this.driverConnectionState =false;
         }
     }
@@ -68,7 +72,8 @@ public class ItronBridge extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (SEND.equals(action)) {
+        Log.d(this.getClass().getName(), "execute : " + action);
+        if (action.equals("send")) {
             this.send(args, callbackContext);
             return true;
         }
@@ -79,15 +84,16 @@ public class ItronBridge extends CordovaPlugin {
     {
         if(args != null){
             try {
-                string command = args.getJSONobject(0).getString("command");
-                IItronServiceCallback callbackItron = new IItronServiceCallback();
+                String command = args.getJSONObject(0).getString("command");
+                Log.d(this.getClass().getName(), "send cmd : " + command);
+                IItronServiceCallback callbackItron = new ItronServiceCallback();
 
-                if(this.connectionState){
+                if(connectionState){
                     this.mDriverConnection.safelySendCommand(command,callbackItron);
                     
-                     callback.success(true);
+                     callback.success();
                 } else {
-                     callback.success(false);
+                     callback.error("Echec de connexion");
                 }
 
                
@@ -102,23 +108,25 @@ public class ItronBridge extends CordovaPlugin {
     }
 
     private void connectService(CordovaArgs args, CallbackContext callback) throws JSONException {
-       
+        Log.d(this.getClass().getName(), "connectService");
+      
         this.mDriverConnection = new ItronBridgeService(new WeakReference(this));
 
-        if (this.mDriverConnection != null) {
-            boolean connectionState = this.mDriverConnection.safelyConnectTheService();
-            callback.success(connectionState);
+        if (mDriverConnection != null) {
+            this.connectionState = this.mDriverConnection.safelyConnectTheService();
+            callback.success();
         } else {
             callback.error("Echec connexion Itron Driver");
         }
     }
-
+/*
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions,
                                           int[] grantResults) throws JSONException {
 
+        PackageManager packageManager = this.cordova.getActivity().getPackageManager();
         for(int result:grantResults) {
-            if(result == PackageManager.PERMISSION_DENIED) {
+            if(result == packageManager.PERMISSION_DENIED) {
                 LOG.d(TAG, "User *rejected* location permission");
                 this.permissionCallback.sendPluginResult(new PluginResult(
                         PluginResult.Status.ERROR,
@@ -127,5 +135,5 @@ public class ItronBridge extends CordovaPlugin {
                 return;
             }
         }
-    }
+    }*/
 }

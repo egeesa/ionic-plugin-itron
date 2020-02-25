@@ -9,7 +9,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.google.gson.JsonObject;
+//import com.google.gson.JsonObject;
+import org.json.JSONObject;
 import com.itron.wh.androiddriver.service.aidl.IItronServiceApi;
 import com.itron.wh.androiddriver.service.aidl.IItronServiceApi.Stub;
 import com.itron.wh.androiddriver.service.aidl.IItronServiceCallback;
@@ -22,7 +23,7 @@ public class ItronBridgeService implements ServiceConnection
     private static final String ITRON_DRIVER_ACTION = "com.itron.wh.androiddriver.service.intent.action.EXECUTE";
     private static final String SERVICE_NAME = "com.itron.wh.androiddriver.service.services.ItronDriverService";
     private static final String SERVICE_PACKAGE_NAME = "com.itron.wh.androiddriver.service";
-    private static final String LOG_TAG = ItronDriverConnection.class.getCanonicalName();
+    private static final String LOG_TAG = ItronBridgeService.class.getCanonicalName();
     private static final String EGEE_GUID = "d70741e1-585c-4cae-8f7c-e58f0b81c59e"; // Doit matcher avec la licence Itron
     private static final String EGEE_APPLICATION_ID = "Egee4Itron"; // Utilisé daans la commande Send
 
@@ -36,7 +37,7 @@ public class ItronBridgeService implements ServiceConnection
 
     // Constructeur
 
-    public ItronDriverConnection(WeakReference<Activity> activity) {
+    public ItronBridgeService(WeakReference<Activity> activity) {
       this.activity = activity;
     }
 
@@ -135,11 +136,8 @@ public class ItronBridgeService implements ServiceConnection
     }
 
      private String getDefaultDriverSettings() {
-      JsonObject settings = new JsonObject();
-      settings.addProperty("ATS", Boolean.valueOf(true));
-      settings.addProperty("INTELIS_CONTINUOUS_WATER_SUPPLY", Boolean.valueOf(false));
-      settings.addProperty("INTELIS_IGNORE_REVERSEDMETER_ON_NON_CONTINUOUS_WATER_SUPPLY", Boolean.valueOf(false));
-      return settings.toString();
+        String settings ="{\"ATS\" : true,\"INTELIS_CONTINUOUS_WATER_SUPPLY\" : false,\"INTELIS_IGNORE_REVERSEDMETER_ON_NON_CONTINUOUS_WATER_SUPPLY\": false}";
+        return settings;
   }
 
 }

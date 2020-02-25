@@ -16,6 +16,10 @@
       </config-file>
       <config-file parent="/*" target="AndroidManifest.xml" />
       <source-file src="src/android/ItronBridge.java" target-dir="src/cordova/plugin/itronbridge/ItronBridge" />
+      <source-file src="src/android/ItronServiceCallback.java" target-dir="src/cordova/plugin/itronbridge/ItronServiceCallback" />
+      <source-file src="src/android/ItronBridgeService.java" target-dir="src/cordova/plugin/itronbridgeservice/ItronBridge" />
+    <source-file src="src/com/itron/wh/androiddriver/service/aidl/IItronServiceApi.java" target-dir="src/com/itron/wh/androiddriver/service/aidl/IItronServiceApi" />
+      <source-file src="src/com/itron/wh/androiddriver/service/aidl/IItronServiceCallback.java" target-dir="src/com/itron/wh/androiddriver/service/aidl/IItronServiceCallback" />
 
        <config-file target="AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.BLUETOOTH" />
