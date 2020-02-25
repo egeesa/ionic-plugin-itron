@@ -87,7 +87,7 @@ public class ItronBridge extends CordovaPlugin {
                     
                      callback.success(true);
                 } else {
-                     callback.success(false)
+                     callback.success(false);
                 }
 
                
@@ -97,7 +97,7 @@ public class ItronBridge extends CordovaPlugin {
             }
 
         } else {
-            callback.error("La liste des paramétres est null")
+            callback.error("La liste des paramétres est null");
         }
     }
 
