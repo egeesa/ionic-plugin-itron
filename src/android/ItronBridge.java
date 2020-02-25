@@ -48,7 +48,7 @@ public class ItronBridge extends CordovaPlugin {
         Log.d(this.getClass().getName(), "initialize");
         mContext = this.cordova.getActivity();
 
-       this.mDriverConnection = new ItronBridgeService(new WeakReference(this));
+       this.mDriverConnection = new ItronBridgeService(new WeakReference(mContext));
 
         if (mDriverConnection != null) {
             driverConnectionState = this.mDriverConnection.safelyConnectTheService();
