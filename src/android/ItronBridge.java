@@ -64,7 +64,7 @@ public class ItronBridge extends CordovaPlugin {
         this.mDriverConnection.safelyDisconnectTheService();
 
         if(mDriverConnection != null) {
-            cordova.getActivity().getApplicationContext().unbindService(mDriverConnection);
+            //TODO unbindService(mDriverConnection);
             this.driverConnectionState =false;
         }
     }
