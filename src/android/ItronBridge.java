@@ -78,13 +78,14 @@ public class ItronBridge extends CordovaPlugin {
         PUBLIC_CALLBACKS = callbackContext;
         Log.d(TAG+this.getClass().getName(), "execute : " + action);
         if (SendOpenBluetooth.equals(action)) {
-            cordova.getActivity().runOnUiThread(new Runnable() {
+            /* cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
                     //dans args avoir le MACAdress
-                    String openBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"OpenBluetooth\",\"ConnectionId\" : \"27\", \"Guid\": \""+ EGEE_GUID +"\",\"Parameters\" : {\"MacAddress\" : \"" + macAdress + "\"}}}";
-                    this.send(openBluetoothCmd, args, callbackContext);
+                    
                 }
-            });
+            }); */
+            String openBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"OpenBluetooth\",\"ConnectionId\" : \"27\", \"Guid\": \""+ EGEE_GUID +"\",\"Parameters\" : {\"MacAddress\" : \"" + macAdress + "\"}}}";
+            this.send(openBluetoothCmd, args, callbackContext);
         } else {
             return false;
         }
