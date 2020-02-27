@@ -94,9 +94,10 @@ public class ItronBridge extends CordovaPlugin {
                 }
                 //String command = args.getJSONObject(0).getString("command");
                 Log.d(this.getClass().getName(), "send cmd : " + command);
+                Log.d(this.getClass().getName(), "driverConnectionState :" + driverConnectionState);
                 IItronServiceCallback callbackItron = new ItronServiceCallback();
 
-                if(connectionState){
+                if(driverConnectionState){
                     this.mDriverConnection.safelySendCommand(command,callbackItron);
                     
                      callback.success();
@@ -115,7 +116,8 @@ public class ItronBridge extends CordovaPlugin {
         }
     }
 
-    private void connectService(CordovaArgs args, CallbackContext callback) throws JSONException {
+    /*private void connectService(CordovaArgs args, CallbackContext callback) throws JSONException {
+        //TODO n'est pas appelé ?
         Log.d(this.getClass().getName(), "connectService");
       
         this.mDriverConnection = new ItronBridgeService(new WeakReference(this));
@@ -126,7 +128,7 @@ public class ItronBridge extends CordovaPlugin {
         } else {
             callback.error("Echec connexion Itron Driver");
         }
-    }
+    }*/
 /*
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions,
