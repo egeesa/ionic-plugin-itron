@@ -108,6 +108,7 @@ public class ItronBridgeService implements ServiceConnection
   }
 
   public void checkErrorCode(int errorCode) throws RemoteException {
+    Log.d(LOG_TAG, "checkErrorCode " + errorCode);
       switch (errorCode) {
           case 0:
               Log.d(LOG_TAG, "Commande envoyée");

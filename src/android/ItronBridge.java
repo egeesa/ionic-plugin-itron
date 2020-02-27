@@ -32,16 +32,16 @@ import cordova.plugin.itronbridgeservice.ItronBridgeService;
  */
 public class ItronBridge extends CordovaPlugin {
 
+    private CallbackContext PUBLIC_CALLBACKS = null;
     private ItronBridgeService mDriverConnection;
     private boolean driverConnectionState = false;
     private boolean connectionState = false;
     private Context mContext;
-    private IItronServiceCallback callBack;
+    //private IItronServiceCallback callBack;
     private static final String TAG = "ITRONTAG";
 
     //action
-    private static final String SEND = "send";
-    private static final String OpenBluetooth = "OpenBluetooth";
+    private static final String SendOpenBluetooth = "sendOpenBluetooth";
     private static final String EGEE_GUID = "d70741e1-585c-4cae-8f7c-e58f0b81c59e"; // Doit matcher avec la licence Itron
     private static final String macAdress = "00:07:80:10:e8:4a"; 
    
@@ -49,7 +49,7 @@ public class ItronBridge extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        Log.d(this.getClass().getName(), "initialize");
+        Log.d(TAG+this.getClass().getName(), "initialize");
         mContext = this.cordova.getActivity();
 
        this.mDriverConnection = new ItronBridgeService(new WeakReference(mContext));
@@ -64,7 +64,7 @@ public class ItronBridge extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
-        Log.d(this.getClass().getName(), "onDestroy");
+        Log.d(TAG+this.getClass().getName(), "onDestroy");
         this.mDriverConnection.safelyDisconnectTheService();
 
         if(mDriverConnection != null) {
@@ -75,55 +75,57 @@ public class ItronBridge extends CordovaPlugin {
 
 
     @Override
-    public boolean execute(String action, String args, CallbackContext callbackContext) throws JSONException {
-        Log.d(this.getClass().getName(), "execute : " + action);
-        if (SEND.equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        PUBLIC_CALLBACKS = callbackContext;
+        Log.d(TAG+this.getClass().getName(), "execute : " + action);
+        if (SendOpenBluetooth.equals(action)) {
+            cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    this.send(args, callbackContext);
-                    callbackContext.success(); // Thread-safe.
+                    //dans args avoir le MACAdress
+                    this.send(openBluetoothCmd, args, callbackContext);
                 }
             });
-            return true;
+        } else {
+            return false;
         }
-        return false;
+        PluginResult result = new PluginResult(PluginResult.Status.OK, "success");
+        result.setKeepCallback(true);
+        PUBLIC_CALLBACKS.sendPluginResult(result);
+
+        return true;
     }
 
-    private void send(String args, CallbackContext callback)
+    private void send(String command, JSONArray args, CallbackContext callback)
     {
-        if(args != null){
-            try {
-                String command =  openBluetoothCmd;
-                if(OpenBluetooth.equals(args)){
-                    command =  openBluetoothCmd;
-                }
-                //String command = args.getJSONObject(0).getString("command");
-                Log.d(this.getClass().getName(), "send cmd : " + command);
-                Log.d(this.getClass().getName(), "driverConnectionState :" + driverConnectionState);
-                IItronServiceCallback callbackItron = new ItronServiceCallback();
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                if(args != null){
+                    try {
+                        Log.d(TAG+this.getClass().getName(), "send cmd : " + command);
+                        Log.d(TAG+this.getClass().getName(), "driverConnectionState :" + driverConnectionState);
+                        IItronServiceCallback callbackItron = new ItronServiceCallback();
 
-                if(driverConnectionState){
-                    this.mDriverConnection.safelySendCommand(command,callbackItron);
-                    
-                     callback.success();
+                        if(driverConnectionState){
+                            this.mDriverConnection.safelySendCommand(command,callbackItron);
+                            //traiter le retour de Itron callbackItron
+                            callback.success(callbackItron);
+                        } else {
+                            callback.error("Echec de connexion");
+                        }
+                    } catch (Exception ex) {
+                        callback.error("Une erreur s'est produite: "+ex);
+                    }
+
                 } else {
-                     callback.error("Echec de connexion");
+                    callback.error("La liste des paramétres est null");
                 }
-
-               
-
-            } catch (Exception ex) {
-                callback.error("Une erreur s'est produite: "+ex);
             }
-
-        } else {
-            callback.error("La liste des paramétres est null");
-        }
+        });
     }
 
     /*private void connectService(CordovaArgs args, CallbackContext callback) throws JSONException {
         //TODO n'est pas appelé ?
-        Log.d(this.getClass().getName(), "connectService");
+        Log.d(TAG+this.getClass().getName(), "connectService");
       
         this.mDriverConnection = new ItronBridgeService(new WeakReference(this));
 
