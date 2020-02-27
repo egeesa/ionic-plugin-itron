@@ -44,8 +44,7 @@ public class ItronBridge extends CordovaPlugin {
     private static final String SendOpenBluetooth = "sendOpenBluetooth";
     private static final String EGEE_GUID = "d70741e1-585c-4cae-8f7c-e58f0b81c59e"; // Doit matcher avec la licence Itron
     private static final String macAdress = "00:07:80:10:e8:4a"; 
-   
-    private static final String openBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"OpenBluetooth\",\"ConnectionId\" : \"27\", \"Guid\": \""+ EGEE_GUID +"\",\"Parameters\" : {\"MacAddress\" : \"" + macAdress + "\"}}}";
+
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -82,7 +81,8 @@ public class ItronBridge extends CordovaPlugin {
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
                     //dans args avoir le MACAdress
-                    this.send(this.openBluetoothCmd, args, callbackContext);
+                    String openBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"OpenBluetooth\",\"ConnectionId\" : \"27\", \"Guid\": \""+ EGEE_GUID +"\",\"Parameters\" : {\"MacAddress\" : \"" + macAdress + "\"}}}";
+                    this.send(openBluetoothCmd, args, callbackContext);
                 }
             });
         } else {
