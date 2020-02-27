@@ -98,30 +98,26 @@ public class ItronBridge extends CordovaPlugin {
 
     private void send(String command, JSONArray args, CallbackContext callback)
     {
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                if(args != null){
-                    try {
-                        Log.d(TAG+this.getClass().getName(), "send cmd : " + command);
-                        Log.d(TAG+this.getClass().getName(), "driverConnectionState :" + driverConnectionState);
-                        IItronServiceCallback callbackItron = new ItronServiceCallback();
+        if(args != null){
+            try {
+                Log.d(TAG+this.getClass().getName(), "send cmd : " + command);
+                Log.d(TAG+this.getClass().getName(), "driverConnectionState :" + driverConnectionState);
+                IItronServiceCallback callbackItron = new ItronServiceCallback();
 
-                        if(driverConnectionState){
-                            this.mDriverConnection.safelySendCommand(command,callbackItron);
-                            //traiter le retour de Itron callbackItron
-                            callback.success();
-                        } else {
-                            callback.error("Echec de connexion");
-                        }
-                    } catch (Exception ex) {
-                        callback.error("Une erreur s'est produite: "+ex);
-                    }
-
+                if(driverConnectionState){
+                    this.mDriverConnection.safelySendCommand(command,callbackItron);
+                    //traiter le retour de Itron callbackItron
+                    callback.success();
                 } else {
-                    callback.error("La liste des paramétres est null");
+                    callback.error("Echec de connexion");
                 }
+            } catch (Exception ex) {
+                callback.error("Une erreur s'est produite: "+ex);
             }
-        });
+
+        } else {
+            callback.error("La liste des paramétres est null");
+        }
     }
 
     /*private void connectService(CordovaArgs args, CallbackContext callback) throws JSONException {
