@@ -78,7 +78,12 @@ public class ItronBridge extends CordovaPlugin {
     public boolean execute(String action, String args, CallbackContext callbackContext) throws JSONException {
         Log.d(this.getClass().getName(), "execute : " + action);
         if (SEND.equals(action)) {
-            this.send(args, callbackContext);
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    this.send(args, callbackContext);
+                    callbackContext.success(); // Thread-safe.
+                }
+            });
             return true;
         }
         return false;
