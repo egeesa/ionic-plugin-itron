@@ -1,6 +1,6 @@
 var exec = require('cordova/exec');
 
-module.exports.send = function(arg0, success, error)
+module.exports.sendOpenBluetooth = function(arg0, success, error)
 {
-    exec(success, error, 'ItronBridge', 'send', [arg0]);
+    exec(success, error, 'ItronBridge', 'sendOpenBluetooth', [arg0]);
 }
