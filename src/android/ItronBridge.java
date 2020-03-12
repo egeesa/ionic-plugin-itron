@@ -309,11 +309,11 @@ public class ItronBridge extends CordovaPlugin {
         }
     }
 
-    // To transmit any message to javascript
+    //  transfert des messages vers javascript
     public void transmitToJs(JSONObject message) {
         if (PUBLIC_CALLBACKS == null) { return; }
         PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, message);
-        pluginResult.setKeepCallback(true); // we want to retain this callback forever
+        pluginResult.setKeepCallback(true); 
         PUBLIC_CALLBACKS.sendPluginResult(pluginResult);
     }
 
@@ -360,7 +360,13 @@ public class ItronBridge extends CordovaPlugin {
                                 JSONObject jsonCmd = new JSONObject(myObjectSuccess);
                                 String cmd = getCommand(jsonCmd);
                                 if ("OpenBluetooth".equals(cmd)) {
-                                    transmitToJs(jsonObject); 
+                                    transmitToJs(jsonObject);
+                                }
+                                
+                                if ("CloseBluetooth".equals(cmd)) {
+                                    JSONObject msg = new JSONObject();
+                                    msg.put("message", "Liaison Bluetooth fermée.");
+                                    transmitToJs(msg);
                                 }
                                 
                             };
