@@ -61,6 +61,7 @@ public class ItronBridge extends CordovaPlugin {
     private static final String READCYCBLE = "readCyble";
     private static final String READPULSE = "readPulse";
     private static final String UPDATELICENSE = "updateLicense";
+    private static final String READCYBLEPOLLING = "readCyblePolling";
     
 
     private IItronServiceCallback mItronServiceCallback;
@@ -101,7 +102,7 @@ public class ItronBridge extends CordovaPlugin {
 
         Log.d(TAG + this.getClass().getName(), "execute : " + action);
         
-         if(OPENCONNECTION.equals(action)) {
+       if(OPENCONNECTION.equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     
@@ -136,7 +137,14 @@ public class ItronBridge extends CordovaPlugin {
                     updateLicense(args, callbackContext);
                 }
            }); 
-        } else {
+        } else if(READCYBLEPOLLING.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    
+                    readCyblePolling(args, callbackContext);
+                }
+           }); 
+        }else {
             return false;
         }
       
@@ -145,6 +153,14 @@ public class ItronBridge extends CordovaPlugin {
         return true;
     }
 
+    
+     /**
+     * Cette fonction permet de lire un module Itron de type CYBLE RF
+     *
+     * @param args un object contenant le numéro du module ex: {numeroModule: "090298685", connectionId: 3}
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant les données du module (index, alarmes ...etc)
+     */
     private void readCyble(JSONArray args, CallbackContext callback)
     {
         if (args != null) {
@@ -180,29 +196,90 @@ public class ItronBridge extends CordovaPlugin {
             callback.error("La liste des paramétres est vide");
         }
     }
-    
+
+
+     /**
+     * Cette fonction permet de lire un module Itron de type PULSE RF
+     *
+     * @param args un object contenant le numéro du module ex: {numeroModule: "090298685", connectionId: 3}
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant les données du module (index, alarmes ...etc)
+     */
     private void readPulse(JSONArray args, CallbackContext callback)
+     {
+         if (args != null) {
+
+             try {
+                 JSONObject params = args.getJSONObject(0);
+                 String param1 = params.getString("numeroModule");
+                 Integer param2 = Integer.parseInt(params.getString("connectionId"));
+
+                 Log.d(TAG + this.getClass().getName(), "Mac Adresse : " + param1);
+
+                 String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
+                         + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
+                         + "\"}}}";
+
+                 if (mItronServiceApi != null) {
+                     retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdreadPulse,
+                             this.mItronServiceCallback);
+                     checkErrorCode(retourSendCommand, cmdreadPulse);
+                 } else {
+                     callback.error("Echec instanciation du driver service Itron. Réessayer");
+                 }
+
+             } catch (RemoteException e) {
+                 callback.error("Erreur RemoteException: " + e.toString());
+             } catch (JSONException jsonEx) {
+                 callback.error("Erreur JSONException: " + jsonEx.toString());
+             } catch (Exception exc) {
+                 callback.error("Erreur Exception: " + exc.toString());
+             }
+
+         } else {
+             callback.error("La liste des paramétres est vide");
+         }
+     }
+    
+      /**
+      * Cette fonction permet de lire un module Itron de type CYBLE RF en mode polling
+      *
+      * A TESTER
+      * @param args un object contenant le numéro du module ex: {modulesList: ["090298685","100258561","100258561"], connectionId: 3}
+      * @param callbackContext A Cordova callback context
+      * @return un object contenant les données des modules (index, alarmes ...etc)
+      */
+    private void readCyblePolling(JSONArray args, CallbackContext callback)
     {
         if (args != null) {
 
             try {
+                String[] param1 ;
                 JSONObject params = args.getJSONObject(0);
-                String param1 = params.getString("numeroModule");
+                JSONArray modulesList = new JSONArray(params.getJSONArray("modulesList"));
                 Integer param2 = Integer.parseInt(params.getString("connectionId"));
-                
 
-                Log.d(TAG + this.getClass().getName(), "Mac Adresse : " + param1);
+                if (modulesList.length() != 0) {
+                    param1 = new String[modulesList.length()];
+                    for (int i = 0; i < modulesList.length(); i++) {
+                        param1[i] = modulesList.getString(i);
+                    }
+                    
+                    Log.d(TAG + this.getClass().getName(), "Nombre de module à lire : " + modulesList.length());
 
-                String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
-                + param2 + ", \"Guid\": \"" + EGEE_GUID
-                + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
-                + "\"}}}";
+                    String cmdReadCyblePolling = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadPollingCyble\",\"ConnectionId\" : "
+                            + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumbers\" : \"" + param1
+                            + "\"}}}";
 
-                if (mItronServiceApi != null) {
-                    retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdreadPulse,this.mItronServiceCallback);
-                    checkErrorCode(retourSendCommand, cmdreadPulse);
+                    if (mItronServiceApi != null) {
+                        retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdReadCyblePolling,
+                                this.mItronServiceCallback);
+                        checkErrorCode(retourSendCommand, cmdReadCyblePolling);
+                    } else {
+                        callback.error("Echec instanciation du driver service Itron. Réessayer");
+                    }
                 } else {
-                    callback.error("Echec instanciation du driver service Itron. Réessayer");
+                    callback.error("Aucun module à lire");
                 }
 
             } catch (RemoteException e) {
@@ -218,17 +295,25 @@ public class ItronBridge extends CordovaPlugin {
         }
     }
 
+    
+    /**
+     * Cette fonction permet d'établir la connexion Bluetooth avec le RF Master
+     *
+     * @param args un object contenant l'adresse MAC du RF Master ex: { macAddress: '00:07:80:10:E8:4A'}
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant l'identifiant de connexion.
+     */
     private void openConnection(JSONArray args, CallbackContext callback)
     {
         if (args != null) {
 
             try {
-               
+
                 JSONObject params = args.getJSONObject(0);
                 String param1 = params.getString("macAddress");
                 //
                 if (param1 != null || param1 != "") {
-                    
+
                     Log.d(TAG + this.getClass().getName(), "Mac Adresse : " + param1);
 
                     String openBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"OpenBluetooth\",\"ConnectionId\" : \"null \", \"Guid\": \""
@@ -242,9 +327,8 @@ public class ItronBridge extends CordovaPlugin {
                         callback.error("echec");
                     }
                 } else {
-                    callback.error("La liste des paramétres est vide"); 
+                    callback.error("La liste des paramétres est vide");
                 }
-               
 
             } catch (RemoteException e) {
                 callback.error("Erreur RemoteException: " + e.toString());
@@ -259,12 +343,23 @@ public class ItronBridge extends CordovaPlugin {
         }
     }
     
+
+    /**
+     * Cette fonction permet de fermer la connexion Bluetooth avec le RF Master
+     *
+     * @param args un object contenant l'identifiant de connexion ex: { connectionId: 3}
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant le message de confirmation de fermeture.
+     */
     private void closeConnection(JSONArray args, CallbackContext callback)
     {
         try {
 
+            JSONObject params = args.getJSONObject(0);
+            Integer param1 = Integer.parseInt(params.getString("connectionId"));
+
             String closeBluetoothCmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCommon\",\"Command\" : \"CloseBluetooth\",\"ConnectionId\" : "
-                    + this.connectionId + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : \"null\"}}";
+                    + param1 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : \"null\"}}";
 
             Log.d(TAG + this.getClass().getName(), "send cmd: " + closeBluetoothCmd);
 
@@ -284,7 +379,13 @@ public class ItronBridge extends CordovaPlugin {
             callback.error("Erreur Exception: " + exc.toString());
         }
     }
-    
+
+    /**
+     * Cette fonction permet de mettre à jour la licence Itron
+     *
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant le message de confirmation de fermeture.
+     */
     private void updateLicense(JSONArray args, CallbackContext callback)
     {
         try {
@@ -321,72 +422,76 @@ public class ItronBridge extends CordovaPlugin {
         public void onStatusUpdated(String message) {
             //Lancer la tâche des traitements des messages callbackItron
            
-            if(message != ""){
+            if (message != "") {
+                
+                cordova.getThreadPool().execute(new Runnable() {
+                    public void run() {
+                        try {
 
-                try {
-
-                        Log.d(TAG+this.getClass().getName(), "CallbackItron : " + message);
-                       
-                        JSONObject jsonObject = new JSONObject(message);
-
-                        for (int i = 0; i < jsonObject.names().length(); i++) {
-                            
-                            if(("Information").equals(jsonObject.names().getString(i))){
-
-                                String myObjectData = jsonObject.get("Information").toString();
-                                JSONObject jsonCmd = new JSONObject(myObjectData);
-                                String cmd = getCommand(jsonCmd);
-                                if ("ReadCyble".equals(cmd)) {
-                                    String msg = getMessage(jsonCmd);
-                                    if (!"Command started".equals(msg)) {
+                            Log.d(TAG+this.getClass().getName(), "CallbackItron : " + message);
+                           
+                            JSONObject jsonObject = new JSONObject(message);
+    
+                            for (int i = 0; i < jsonObject.names().length(); i++) {
+                                
+                                if(("Information").equals(jsonObject.names().getString(i))){
+    
+                                    String myObjectData = jsonObject.get("Information").toString();
+                                    JSONObject jsonCmd = new JSONObject(myObjectData);
+                                    String cmd = getCommand(jsonCmd);
+                                    if ("ReadCyble".equals(cmd)) {
+                                        String msg = getMessage(jsonCmd);
+                                        if (!"Command started".equals(msg)) {
+                                            transmitToJs(jsonObject);
+                                        }
+                                    }
+    
+                                };
+                               
+                                if(("Error").equals(jsonObject.names().getString(i))){
+    
+                                    Log.d(TAG+this.getClass().getName(), "ERREUR : " + jsonObject.get(jsonObject.names().getString(i)));
+                                    transmitToJs(jsonObject);
+    
+                                };
+    
+                                if(("Success").equals(jsonObject.names().getString(i))){
+    
+                                    Log.d(TAG + this.getClass().getName(),
+                                            "SUCCES : " + jsonObject.get(jsonObject.names().getString(i)));
+                                    String myObjectSuccess = jsonObject.get("Success").toString();
+                                    JSONObject jsonCmd = new JSONObject(myObjectSuccess);
+                                    String cmd = getCommand(jsonCmd);
+    
+                                    if ("OpenBluetooth".equals(cmd)) {
                                         transmitToJs(jsonObject);
                                     }
-                                }
-
-                            };
-                           
-                            if(("Error").equals(jsonObject.names().getString(i))){
-
-                                Log.d(TAG+this.getClass().getName(), "ERREUR : " + jsonObject.get(jsonObject.names().getString(i)));
-                                transmitToJs(jsonObject);
-
-                            };
-
-                            if(("Success").equals(jsonObject.names().getString(i))){
-
-                                Log.d(TAG + this.getClass().getName(),
-                                        "SUCCES : " + jsonObject.get(jsonObject.names().getString(i)));
-                                String myObjectSuccess = jsonObject.get("Success").toString();
-                                JSONObject jsonCmd = new JSONObject(myObjectSuccess);
-                                String cmd = getCommand(jsonCmd);
-                                if ("OpenBluetooth".equals(cmd)) {
-                                    transmitToJs(jsonObject);
-                                }
-                                
-                                if ("CloseBluetooth".equals(cmd)) {
-                                    JSONObject msg = new JSONObject();
-                                    msg.put("message", "Liaison Bluetooth fermée.");
-                                    transmitToJs(msg);
-                                }
-                                
-                            };
-
-                            if (("Data").equals(jsonObject.names().getString(i))) {
-                                
-                                String myObjectData = jsonObject.get("Data").toString();
-                                JSONObject jsonCmd = new JSONObject(myObjectData);
-                                String cmd = getCommand(jsonCmd);
-                                if ("ReadCyble".equals(cmd)) {
-                                    transmitToJs(jsonObject);
-                                }
-                               
-                            };
-                        }
-                } catch (JSONException e) {
-                    Log.d(TAG+this.getClass().getName(), "Erreur JSONObject : " + e.toString());
-                    throw new RuntimeException(e);
-                }
-
+                                    if ("CloseBluetooth".equals(cmd)) {
+                                        JSONObject msg = new JSONObject();
+                                        msg.put("message", "Liaison Bluetooth fermée.");
+                                        transmitToJs(msg);
+                                    }
+                                    
+                                };
+    
+                                if (("Data").equals(jsonObject.names().getString(i))) {
+                                    
+                                    String myObjectData = jsonObject.get("Data").toString();
+                                    JSONObject jsonCmd = new JSONObject(myObjectData);
+                                    String cmd = getCommand(jsonCmd);
+                                    if ("ReadCyble".equals(cmd)) {
+                                        transmitToJs(jsonObject);
+                                    }
+                                   
+                                };
+                            }
+                    } catch (JSONException e) {
+                        Log.d(TAG+this.getClass().getName(), "Erreur JSONObject : " + e.toString());
+                        throw new RuntimeException(e);
+                    }
+                       
+                    }
+               }); 
             }
         }
     }
@@ -401,7 +506,8 @@ public class ItronBridge extends CordovaPlugin {
          @Override
         public void onServiceDisconnected(ComponentName name) {
            try {
-               Integer result = mItronServiceApi.cancel(EGEE_APPLICATION_ID);
+               retourSendCommand = mItronServiceApi.cancel(EGEE_APPLICATION_ID);
+               checkErrorCode(retourSendCommand, "");
            } catch (RemoteException ex) {
             Log.d(TAG+this.getClass().getName(), "RemoteException onServiceDisconnected: " + ex.toString());
            }
