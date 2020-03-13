@@ -16,6 +16,10 @@ cordova.define("cordova-plugin-itronbridge.ItronBridge", function(require, expor
         module.exports.readCyblePolling = function (arg0, success, error) {
             exec(success, error, 'ItronBridge', 'readCyblePolling', [arg0]);
         };
+
+        module.exports.readPulsePolling = function (arg0, success, error) {
+            exec(success, error, 'ItronBridge', 'readPulsePolling', [arg0]);
+        };
     
         module.exports.readPulse = function (arg0, success, error) {
             exec(success, error, 'ItronBridge', 'readPulse', [arg0]);

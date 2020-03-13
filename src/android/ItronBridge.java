@@ -29,6 +29,7 @@ import android.os.RemoteException;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import android.util.Log;
 
@@ -250,15 +251,69 @@ public class ItronBridge extends CordovaPlugin {
       * @return un object contenant les données des modules (index, alarmes ...etc)
       */
     private void readCyblePolling(JSONArray args, CallbackContext callback)
+      {
+          if (args != null) {
+
+              try {
+                  String[] param1;
+                  JSONObject params = args.getJSONObject(0);
+                  JSONArray modulesList = params.getJSONArray("modulesList");
+                  Integer param2 = Integer.parseInt(params.getString("connectionId"));
+                  Log.d(TAG + this.getClass().getName(), "Connection ID : " + param2);
+                  if (modulesList.length() != 0) {
+                      param1 = new String[modulesList.length()];
+                      for (int i = 0; i < modulesList.length(); i++) {
+                          param1[i] = modulesList.getString(i);
+                      }
+
+                      Log.d(TAG + this.getClass().getName(), "Nombre de module à lire : " + modulesList.length());
+
+                      String cmdReadCyblePolling = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadPollingCyble\",\"ConnectionId\" : "
+                              + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumbers\" : "
+                              + Arrays.toString(param1) + "}}}";
+
+                      if (mItronServiceApi != null) {
+                          retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdReadCyblePolling,
+                                  this.mItronServiceCallback);
+                          checkErrorCode(retourSendCommand, cmdReadCyblePolling);
+                      } else {
+                          callback.error("Echec instanciation du driver service Itron. Réessayer");
+                      }
+                  } else {
+                      callback.error("Aucun module à lire");
+                  }
+
+              } catch (RemoteException e) {
+                  callback.error("Erreur RemoteException: " + e.toString());
+              } catch (JSONException jsonEx) {
+                  callback.error("Erreur JSONException: " + jsonEx.toString());
+              } catch (Exception exc) {
+                  callback.error("Erreur Exception: " + exc.toString());
+              }
+
+          } else {
+              callback.error("La liste des paramétres est vide");
+          }
+      }
+    
+        /**
+      * Cette fonction permet de lire un module Itron de type PULSE RF en mode polling
+      *
+      * A TESTER
+      * @param args un object contenant le numéro du module ex: {modulesList: ["090298685","100258561","100258561"], connectionId: 3}
+      * @param callbackContext A Cordova callback context
+      * @return un object contenant les données des modules (index, alarmes ...etc)
+      */
+    private void readPulsePolling(JSONArray args, CallbackContext callback)
     {
         if (args != null) {
 
             try {
                 String[] param1 ;
                 JSONObject params = args.getJSONObject(0);
-                JSONArray modulesList = new JSONArray(params.getJSONArray("modulesList"));
+                JSONArray modulesList = params.getJSONArray("modulesList");
                 Integer param2 = Integer.parseInt(params.getString("connectionId"));
-
+                Log.d(TAG + this.getClass().getName(), "Connection ID : " + param2);
                 if (modulesList.length() != 0) {
                     param1 = new String[modulesList.length()];
                     for (int i = 0; i < modulesList.length(); i++) {
@@ -267,9 +322,8 @@ public class ItronBridge extends CordovaPlugin {
                     
                     Log.d(TAG + this.getClass().getName(), "Nombre de module à lire : " + modulesList.length());
 
-                    String cmdReadCyblePolling = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadPollingCyble\",\"ConnectionId\" : "
-                            + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumbers\" : \"" + param1
-                            + "\"}}}";
+                    String cmdReadCyblePolling = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadPollingPulse\",\"ConnectionId\" : "
+                            + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumbers\" : " + Arrays.toString(param1) + "}}}";
 
                     if (mItronServiceApi != null) {
                         retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdReadCyblePolling,
@@ -445,6 +499,13 @@ public class ItronBridge extends CordovaPlugin {
                                             transmitToJs(jsonObject);
                                         }
                                     }
+
+                                    if ("ReadPollingCyble".equals(cmd)) {
+                                        String msg = getMessage(jsonCmd);
+                                        if (!"Command started".equals(msg)) {
+                                            transmitToJs(jsonObject);
+                                        }
+                                    }
     
                                 };
                                
@@ -466,11 +527,16 @@ public class ItronBridge extends CordovaPlugin {
                                     if ("OpenBluetooth".equals(cmd)) {
                                         transmitToJs(jsonObject);
                                     }
+
                                     if ("CloseBluetooth".equals(cmd)) {
                                         JSONObject msg = new JSONObject();
                                         msg.put("message", "Liaison Bluetooth fermée.");
                                         transmitToJs(msg);
                                     }
+
+                                    // if ("ReadPollingCyble".equals(cmd)) {
+                                    //     transmitToJs(jsonObject);
+                                    // }
                                     
                                 };
     
@@ -482,6 +548,11 @@ public class ItronBridge extends CordovaPlugin {
                                     if ("ReadCyble".equals(cmd)) {
                                         transmitToJs(jsonObject);
                                     }
+
+                                    if ("ReadPollingCyble".equals(cmd)) {
+                                        transmitToJs(jsonObject);
+                                    }
+                                    
                                    
                                 };
                             }
