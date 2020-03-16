@@ -36,7 +36,7 @@ import android.util.Log;
 import com.itron.wh.androiddriver.service.aidl.IItronServiceApi;
 import com.itron.wh.androiddriver.service.aidl.IItronServiceApi.Stub;
 import com.itron.wh.androiddriver.service.aidl.IItronServiceCallback;
-import cordova.plugin.itronbridgeservice.ItronBridgeService;
+
 /**
  * This class echoes a string called from JavaScript.
  */
@@ -63,6 +63,7 @@ public class ItronBridge extends CordovaPlugin {
     private static final String READPULSE = "readPulse";
     private static final String UPDATELICENSE = "updateLicense";
     private static final String READCYBLEPOLLING = "readCyblePolling";
+    private static final String READPULSEPOLLING = "readPulsePolling";
     
 
     private IItronServiceCallback mItronServiceCallback;
@@ -145,7 +146,14 @@ public class ItronBridge extends CordovaPlugin {
                     readCyblePolling(args, callbackContext);
                 }
            }); 
-        }else {
+        } else  if(READPULSEPOLLING.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    
+                    readCyblePolling(args, callbackContext);
+                }
+           }); 
+        } else {
             return false;
         }
       
