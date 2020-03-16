@@ -253,7 +253,7 @@ public class ItronBridge extends CordovaPlugin {
       /**
       * Cette fonction permet de lire un module Itron de type CYBLE RF en mode polling
       *
-      * A TESTER
+      * TESTER en partie, pouvoir retourner la liste des modules requêtés
       * @param args un object contenant le numéro du module ex: {modulesList: ["090298685","100258561","100258561"], connectionId: 3}
       * @param callbackContext A Cordova callback context
       * @return un object contenant les données des modules (index, alarmes ...etc)
@@ -501,16 +501,17 @@ public class ItronBridge extends CordovaPlugin {
                                     String myObjectData = jsonObject.get("Information").toString();
                                     JSONObject jsonCmd = new JSONObject(myObjectData);
                                     String cmd = getCommand(jsonCmd);
+
                                     if ("ReadCyble".equals(cmd)) {
-                                        String msg = getMessage(jsonCmd);
-                                        if (!"Command started".equals(msg)) {
+                                        String msg0 = getMessage(jsonCmd);
+                                        if (!"Command started".equals(msg0)) {
                                             transmitToJs(jsonObject);
                                         }
                                     }
 
                                     if ("ReadPollingCyble".equals(cmd)) {
-                                        String msg = getMessage(jsonCmd);
-                                        if (!"Command started".equals(msg)) {
+                                        String msg1 = getMessage(jsonCmd);
+                                        if (!"Command started".equals(msg1)) {
                                             transmitToJs(jsonObject);
                                         }
                                     }
@@ -524,14 +525,14 @@ public class ItronBridge extends CordovaPlugin {
     
                                 };
     
-                                if(("Success").equals(jsonObject.names().getString(i))){
-    
+                                if (("Success").equals(jsonObject.names().getString(i))) {
+
                                     Log.d(TAG + this.getClass().getName(),
                                             "SUCCES : " + jsonObject.get(jsonObject.names().getString(i)));
                                     String myObjectSuccess = jsonObject.get("Success").toString();
                                     JSONObject jsonCmd = new JSONObject(myObjectSuccess);
                                     String cmd = getCommand(jsonCmd);
-    
+
                                     if ("OpenBluetooth".equals(cmd)) {
                                         transmitToJs(jsonObject);
                                     }
@@ -546,7 +547,8 @@ public class ItronBridge extends CordovaPlugin {
                                     //     transmitToJs(jsonObject);
                                     // }
                                     
-                                };
+                                }
+                                ;
     
                                 if (("Data").equals(jsonObject.names().getString(i))) {
                                     
