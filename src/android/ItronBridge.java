@@ -59,7 +59,7 @@ public class ItronBridge extends CordovaPlugin {
     private static final String EGEE_GUID = "d70741e1-585c-4cae-8f7c-e58f0b81c59e"; // Doit matcher avec la licence
     private static final String OPENCONNECTION = "openConnection";
     private static final String CLOSECONNECTION = "closeConnection";
-    private static final String READCYCBLE = "readCyble";
+    private static final String READCYBLE = "readCyble";
     private static final String READPULSE = "readPulse";
     private static final String UPDATELICENSE = "updateLicense";
     private static final String READCYBLEPOLLING = "readCyblePolling";
@@ -118,7 +118,7 @@ public class ItronBridge extends CordovaPlugin {
                     closeConnection(args, callbackContext);
                 }
            }); 
-        } else if(READCYCBLE.equals(action)) {
+        } else if(READCYBLE.equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     
@@ -150,7 +150,7 @@ public class ItronBridge extends CordovaPlugin {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     
-                    readCyblePolling(args, callbackContext);
+                    readPulsePolling(args, callbackContext);
                 }
            }); 
         } else {
@@ -179,7 +179,7 @@ public class ItronBridge extends CordovaPlugin {
                 String param1 = params.getString("numeroModule");
                 Integer param2 = Integer.parseInt(params.getString("connectionId"));
 
-                Log.d(TAG + this.getClass().getName(), "Mac Adresse : " + param1);
+                Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
 
                 String cmdReadCyble = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
                         + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
@@ -210,7 +210,7 @@ public class ItronBridge extends CordovaPlugin {
      /**
      * Cette fonction permet de lire un module Itron de type PULSE RF
      *
-     * @param args un object contenant le numéro du module ex: {numeroModule: "090298685", connectionId: 3}
+     * @param args un object contenant le numéro du module ex: {numeroModule: "090298685", connectionId: 3, requestUserId: }
      * @param callbackContext A Cordova callback context
      * @return un object contenant les données du module (index, alarmes ...etc)
      */
@@ -222,10 +222,12 @@ public class ItronBridge extends CordovaPlugin {
                  JSONObject params = args.getJSONObject(0);
                  String param1 = params.getString("numeroModule");
                  Integer param2 = Integer.parseInt(params.getString("connectionId"));
+                 Integer param3 = Integer.parseInt(params.getString("requestUserId"));
 
-                 Log.d(TAG + this.getClass().getName(), "Mac Adresse : " + param1);
+                 Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
 
-                 String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
+                 String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : "
+                         + param3 + ", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
                          + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
                          + "\"}}}";
 
@@ -246,7 +248,7 @@ public class ItronBridge extends CordovaPlugin {
              }
 
          } else {
-             callback.error("La liste des paramétres est vide");
+             callback.error("La liste des paramètres est vide");
          }
      }
     
@@ -300,7 +302,7 @@ public class ItronBridge extends CordovaPlugin {
               }
 
           } else {
-              callback.error("La liste des paramétres est vide");
+              callback.error("La liste des paramètres est vide");
           }
       }
     
@@ -330,13 +332,13 @@ public class ItronBridge extends CordovaPlugin {
                     
                     Log.d(TAG + this.getClass().getName(), "Nombre de module à lire : " + modulesList.length());
 
-                    String cmdReadCyblePolling = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadPollingPulse\",\"ConnectionId\" : "
+                    String cmdReadPulsePolling = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadPollingPulse\",\"ConnectionId\" : "
                             + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumbers\" : " + Arrays.toString(param1) + "}}}";
 
                     if (mItronServiceApi != null) {
-                        retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdReadCyblePolling,
+                        retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdReadPulsePolling,
                                 this.mItronServiceCallback);
-                        checkErrorCode(retourSendCommand, cmdReadCyblePolling);
+                        checkErrorCode(retourSendCommand, cmdReadPulsePolling);
                     } else {
                         callback.error("Echec instanciation du driver service Itron. Réessayer");
                     }
@@ -353,7 +355,7 @@ public class ItronBridge extends CordovaPlugin {
             }
 
         } else {
-            callback.error("La liste des paramétres est vide");
+            callback.error("La liste des paramètres est vide");
         }
     }
 
@@ -389,7 +391,7 @@ public class ItronBridge extends CordovaPlugin {
                         callback.error("echec");
                     }
                 } else {
-                    callback.error("La liste des paramétres est vide");
+                    callback.error("La liste des paramètres est vide");
                 }
 
             } catch (RemoteException e) {
@@ -401,7 +403,7 @@ public class ItronBridge extends CordovaPlugin {
             }
 
         } else {
-            callback.error("La liste des paramétres est vide");
+            callback.error("La liste des paramètres est vide");
         }
     }
     
@@ -542,16 +544,11 @@ public class ItronBridge extends CordovaPlugin {
                                         msg.put("message", "Liaison Bluetooth fermée.");
                                         transmitToJs(msg);
                                     }
-
-                                    // if ("ReadPollingCyble".equals(cmd)) {
-                                    //     transmitToJs(jsonObject);
-                                    // }
-                                    
-                                }
-                                ;
+                                };
     
                                 if (("Data").equals(jsonObject.names().getString(i))) {
-                                    
+                                    Log.d(TAG + this.getClass().getName(),
+                                            "DATA : " + jsonObject.get(jsonObject.names().getString(i)));
                                     String myObjectData = jsonObject.get("Data").toString();
                                     JSONObject jsonCmd = new JSONObject(myObjectData);
                                     String cmd = getCommand(jsonCmd);
@@ -562,15 +559,12 @@ public class ItronBridge extends CordovaPlugin {
                                     if ("ReadPollingCyble".equals(cmd)) {
                                         transmitToJs(jsonObject);
                                     }
-                                    
-                                   
                                 };
                             }
-                    } catch (JSONException e) {
-                        Log.d(TAG+this.getClass().getName(), "Erreur JSONObject : " + e.toString());
-                        throw new RuntimeException(e);
-                    }
-                       
+                        } catch (JSONException e) {
+                            Log.d(TAG+this.getClass().getName(), "Erreur JSONObject : " + e.toString());
+                            throw new RuntimeException(e);
+                        }
                     }
                }); 
             }
@@ -695,5 +689,4 @@ public class ItronBridge extends CordovaPlugin {
                   throw new RemoteException("Erreur inconnu");
           }
       }
-
 }
