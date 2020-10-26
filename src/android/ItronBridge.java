@@ -222,7 +222,7 @@ public class ItronBridge extends CordovaPlugin {
                  JSONObject params = args.getJSONObject(0);
                  String param1 = params.getString("numeroModule");
                  Integer param2 = Integer.parseInt(params.getString("connectionId"));
-                 Integer param3 = params.getString("requestUserId");
+                 String param3 = params.getString("requestUserId");
 
                  Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
 
