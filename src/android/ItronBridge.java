@@ -222,12 +222,12 @@ public class ItronBridge extends CordovaPlugin {
                  JSONObject params = args.getJSONObject(0);
                  String param1 = params.getString("numeroModule");
                  Integer param2 = Integer.parseInt(params.getString("connectionId"));
-                 Integer param3 = Integer.parseInt(params.getString("requestUserId"));
+                 Integer param3 = params.getString("requestUserId");
 
                  Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
 
-                 String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : "
-                         + param3 + ", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
+                 String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : \""
+                         + param3 + "\", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
                          + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
                          + "\"}}}";
 
