@@ -60,11 +60,15 @@ public class ItronBridge extends CordovaPlugin {
     private static final String OPENCONNECTION = "openConnection";
     private static final String CLOSECONNECTION = "closeConnection";
     private static final String READCYBLE = "readCyble";
+    private static final String READCYBLEENHANCED = "readCybleEnhanced";
     private static final String READPULSE = "readPulse";
+    private static final String READPULSEENHANCED = "readPulseEnhanced";
     private static final String UPDATELICENSE = "updateLicense";
     private static final String READCYBLEPOLLING = "readCyblePolling";
     private static final String READPULSEPOLLING = "readPulsePolling";
-    
+    private static final String CONFIGUREENHANCEDDATEANDTIME = "configureEnhancedDateAndTime";
+    private static final String CONFIGUREDATEANDTIME = "configureDateAndTime";
+
 
     private IItronServiceCallback mItronServiceCallback;
     private String mMessage = "";
@@ -153,7 +157,35 @@ public class ItronBridge extends CordovaPlugin {
                     readPulsePolling(args, callbackContext);
                 }
            }); 
-        } else {
+        } else  if(READCYBLEENHANCED.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    
+                    readCybleEnhanced(args, callbackContext);
+                }
+           }); 
+        } else  if(READPULSEENHANCED.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    
+                    readPulseEnhanced(args, callbackContext);
+                }
+           }); 
+        } else  if(CONFIGUREENHANCEDDATEANDTIME.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    
+                    configureEnhancedDateAndTime(args, callbackContext);
+                }
+           }); 
+        } else  if(CONFIGUREDATEANDTIME.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    
+                    configureDateAndTime(args, callbackContext);
+                }
+           }); 
+        }else {
             return false;
         }
       
@@ -183,6 +215,50 @@ public class ItronBridge extends CordovaPlugin {
                 Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
 
                 String cmdReadCyble = "{\"Request\" : {\"RequestUserId\" : " + param3 + ", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadCyble\",\"ConnectionId\" : "
+                        + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
+                        + "\"}}}";
+
+                if (mItronServiceApi != null) {
+                    retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdReadCyble,
+                            this.mItronServiceCallback);
+                    checkErrorCode(retourSendCommand, cmdReadCyble);
+                } else {
+                    callback.error("Echec instanciation du driver service Itron. Réessayer");
+                }
+
+            } catch (RemoteException e) {
+                callback.error("Erreur RemoteException: " + e.toString());
+            } catch (JSONException jsonEx) {
+                callback.error("Erreur JSONException: " + jsonEx.toString());
+            } catch (Exception exc) {
+                callback.error("Erreur Exception: " + exc.toString());
+            }
+
+        } else {
+            callback.error("La liste des paramétres est vide");
+        }
+    }
+
+    /**
+     * Cette fonction permet de lire un module Itron de type CYBLE ENHANCED
+     *
+     * @param args un object contenant le numéro du module ex: {numeroModule: "090298685", connectionId: 3}
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant les données du module (index, alarmes ...etc)
+     */
+    private void readCybleEnhanced(JSONArray args, CallbackContext callback)
+    {
+        if (args != null) {
+
+            try {
+                JSONObject params = args.getJSONObject(0);
+                String param1 = params.getString("numeroModule");
+                Integer param2 = Integer.parseInt(params.getString("connectionId"));
+                Integer param3 = Integer.parseInt(params.getString("requestUserId"));
+                
+                Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
+
+                String cmdReadCyble = "{\"Request\" : {\"RequestUserId\" : " + param3 + ", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ReadNRFFrance\",\"ConnectionId\" : "
                         + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
                         + "\"}}}";
 
@@ -252,6 +328,51 @@ public class ItronBridge extends CordovaPlugin {
              callback.error("La liste des paramètres est vide");
          }
      }
+
+          /**
+     * Cette fonction permet de lire un module Itron de type PULSE Enhanced
+     *
+     * @param args un object contenant le numéro du module ex: {numeroModule: "090298685", connectionId: 3, requestUserId: }
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant les données du module (index, alarmes ...etc)
+     */
+    private void readPulseEnhanced(JSONArray args, CallbackContext callback)
+    {
+        if (args != null) {
+
+            try {
+                JSONObject params = args.getJSONObject(0);
+                String param1 = params.getString("numeroModule");
+                Integer param2 = Integer.parseInt(params.getString("connectionId"));
+                Integer param3 = Integer.parseInt(params.getString("requestUserId"));
+
+                Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1 + " requestUserId : " + param3);
+
+                String cmdreadPulse = "{\"Request\" : {\"RequestUserId\" : "
+                        + param3 + ", \"Driver\" : \"ItronWHDriverPulse\",\"Command\" : \"ReadNRFFrance\",\"ConnectionId\" : "
+                        + param2 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1
+                        + "\"}}}";
+
+                if (mItronServiceApi != null) {
+                    retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmdreadPulse,
+                            this.mItronServiceCallback);
+                    checkErrorCode(retourSendCommand, cmdreadPulse);
+                } else {
+                    callback.error("Echec instanciation du driver service Itron. Réessayer");
+                }
+
+            } catch (RemoteException e) {
+                callback.error("Erreur RemoteException: " + e.toString());
+            } catch (JSONException jsonEx) {
+                callback.error("Erreur JSONException: " + jsonEx.toString());
+            } catch (Exception exc) {
+                callback.error("Erreur Exception: " + exc.toString());
+            }
+
+        } else {
+            callback.error("La liste des paramètres est vide");
+        }
+    }
     
       /**
       * Cette fonction permet de lire un module Itron de type CYBLE RF en mode polling
@@ -475,6 +596,82 @@ public class ItronBridge extends CordovaPlugin {
         }
     }
 
+
+     /**
+     * Cette fonction permet de mettre à jour la date et l'heure d'un module cyble enhanced
+     *
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant le message de confirmation de fermeture.
+     */
+    private void configureEnhancedDateAndTime(JSONArray args, CallbackContext callback)
+    {
+        try {
+
+            JSONObject params = args.getJSONObject(0);
+            String param1 = params.getString("numeroModule");
+            String param2 = params.getString("dateTime"); //format attendu YYYY-MM-DDThh:mm:ss
+            Integer param3 = Integer.parseInt(params.getString("connectionId"));
+            
+            Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
+
+            String cmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ConfigureEnhancedDateAndTime\",\"ConnectionId\" : "+ param3 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1 + "\", \"MiuDate\":\"" + param2 + "\" }}}"; 
+            
+            Log.d(TAG + this.getClass().getName(), "send cmd: " + cmd);
+            
+            if (mItronServiceApi != null) {
+
+                retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmd, this.mItronServiceCallback);
+                checkErrorCode(retourSendCommand, cmd);
+                
+            } else {
+                callback.error("Echec instanciation du driver service Itron. Réessayer") ;
+            }
+            
+        } catch (RemoteException e) {
+            callback.error("Erreur RemoteException: "+e.toString());
+        }  catch (Exception exc) {
+            callback.error("Erreur Exception: "+exc.toString());
+        }
+    }
+
+    /**
+     * Cette fonction permet de mettre à jour la date et l'heure d'un module cyble RF
+     *
+     * @param callbackContext A Cordova callback context
+     * @return un object contenant le message de confirmation de fermeture.
+     */
+    private void configureDateAndTime(JSONArray args, CallbackContext callback)
+    {
+        try {
+
+            JSONObject params = args.getJSONObject(0);
+            String param1 = params.getString("numeroModule");
+            String param2 = params.getString("dateTime"); //format attendu YYYY-MM-DDThh:mm:ss
+            Integer param3 = Integer.parseInt(params.getString("connectionId"));
+            
+            Log.d(TAG + this.getClass().getName(), "numeroModule : " + param1);
+
+            String cmd = "{\"Request\" : {\"RequestUserId\" : \"1\", \"Driver\" : \"ItronWHDriverCyble\",\"Command\" : \"ConfigureDateAndTime\",\"ConnectionId\" : "+ param3 + ", \"Guid\": \"" + EGEE_GUID + "\",\"Parameters\" : {\"SerialNumber\" : \"" + param1 + "\", \"DateTimeAndWakeUpMode\": {\"MiuDate\":\"" + param2 + "\" }}}}"; 
+            
+            Log.d(TAG + this.getClass().getName(), "send cmd: " + cmd);
+            
+            if (mItronServiceApi != null) {
+
+                retourSendCommand = mItronServiceApi.send(EGEE_APPLICATION_ID, cmd, this.mItronServiceCallback);
+                checkErrorCode(retourSendCommand, cmd);
+                
+            } else {
+                callback.error("Echec instanciation du driver service Itron. Réessayer") ;
+            }
+            
+        } catch (RemoteException e) {
+            callback.error("Erreur RemoteException: "+e.toString());
+        }  catch (Exception exc) {
+            callback.error("Erreur Exception: "+exc.toString());
+        }
+    }
+
+
     //  transfert des messages vers javascript
     public void transmitToJs(JSONObject message) {
         if (PUBLIC_CALLBACKS == null) { return; }
@@ -505,7 +702,7 @@ public class ItronBridge extends CordovaPlugin {
                                     JSONObject jsonCmd = new JSONObject(myObjectData);
                                     String cmd = getCommand(jsonCmd);
 
-                                    if ("ReadCyble".equals(cmd)) {
+                                    if ("ReadCyble".equals(cmd) || "ReadNRFFrance".equals(cmd)) {
                                         String msg0 = getMessage(jsonCmd);
                                         if (!"Command started".equals(msg0)) {
                                             transmitToJs(jsonObject);
@@ -553,7 +750,7 @@ public class ItronBridge extends CordovaPlugin {
                                     String myObjectData = jsonObject.get("Data").toString();
                                     JSONObject jsonCmd = new JSONObject(myObjectData);
                                     String cmd = getCommand(jsonCmd);
-                                    if ("ReadCyble".equals(cmd)) {
+                                    if ("ReadCyble".equals(cmd) || "ReadNRFFrance".equals(cmd)) {
                                         transmitToJs(jsonObject);
                                     }
 
